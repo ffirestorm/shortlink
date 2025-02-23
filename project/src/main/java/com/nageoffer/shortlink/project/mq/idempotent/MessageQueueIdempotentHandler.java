@@ -41,6 +41,8 @@ public class MessageQueueIdempotentHandler {
      *
      * @param messageId 消息唯一标识
      * @return 消息是否消费过
+     *
+     * setIfAbsent 里面 "0" 代表执行中， "1" 代表已经执行完了
      */
     public boolean isMessageProcessed(String messageId) {
         String key = IDEMPOTENT_KEY_PREFIX + messageId;

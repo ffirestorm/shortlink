@@ -101,7 +101,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         String stream = message.getStream();
         RecordId id = message.getId();
         if (!messageQueueIdempotentHandler.isMessageProcessed(id.toString())) {
-            // 判断当前的这个消息流程是否执行完成
+            // 判断当前的这个消息流程是否执行完成，幂等判断
             if (messageQueueIdempotentHandler.isAccomplish(id.toString())) {
                 return;
             }
@@ -120,6 +120,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
             // 某某某情况宕机了
             messageQueueIdempotentHandler.delMessageProcessed(id.toString());
             log.error("记录短链接监控消费异常", ex);
+            throw ex;
         }
         messageQueueIdempotentHandler.setAccomplish(id.toString());
     }
