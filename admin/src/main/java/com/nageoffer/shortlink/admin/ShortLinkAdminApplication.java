@@ -23,7 +23,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * 短链接后管应用
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
+ * <p>陈py
  */
 @SpringBootApplication
 @MapperScan("com.nageoffer.shortlink.admin.dao.mapper")

@@ -50,7 +50,7 @@ import static com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant.L
 
 /**
  * 短链接分组接口实现层
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
+ * <p>陈py
  */
 @Slf4j
 @Service
@@ -75,6 +75,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public void saveGroup(String username, String groupName) {
+        // 分布式锁，锁住groupMaxNum
         RLock lock = redissonClient.getLock(String.format(LOCK_GROUP_CREATE_KEY, username));
         lock.lock();
         try {
@@ -87,7 +88,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
             }
             String gid;
             do {
-                gid = RandomGenerator.generateRandom();
+                gid = RandomGenerator.generateRandom();     // 随机生成一个gid，重复的时候再重新生成一个
             } while (!hasGid(username, gid));
             GroupDO groupDO = GroupDO.builder()
                     .gid(gid)
@@ -103,6 +104,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public List<ShortLinkGroupRespDTO> listGroup() {
+        // 查询用户分组
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getDelFlag, 0)
                 .eq(GroupDO::getUsername, UserContext.getUsername())
@@ -156,6 +158,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         });
     }
 
+    /**
+     * 查询该用户下有没有这个gid
+     * @param username
+     * @param gid
+     * @return
+     */
     private boolean hasGid(String username, String gid) {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)

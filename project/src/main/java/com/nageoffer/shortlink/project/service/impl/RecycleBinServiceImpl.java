@@ -40,7 +40,7 @@ import static com.nageoffer.shortlink.project.common.constant.RedisKeyConstant.G
 
 /**
  * 回收站管理接口实现层
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
+ * <p>陈py
  */
 @Service
 @RequiredArgsConstructor
@@ -50,13 +50,14 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
 
     @Override
     public void saveRecycleBin(RecycleBinSaveReqDTO requestParam) {
+        // 先删数据库，再删缓存
         LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
                 .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                 .eq(ShortLinkDO::getGid, requestParam.getGid())
                 .eq(ShortLinkDO::getEnableStatus, 0)
                 .eq(ShortLinkDO::getDelFlag, 0);
         ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                .enableStatus(1)
+                .enableStatus(1)        // enableStatus 设置为1 代表放入回收站了
                 .build();
         baseMapper.update(shortLinkDO, updateWrapper);
         stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
@@ -102,7 +103,7 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
         ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
                 .delTime(System.currentTimeMillis())
                 .build();
-        delShortLinkDO.setDelFlag(1);
+        delShortLinkDO.setDelFlag(1);       // 删除标识 为1表示已删除放到回收站里
         baseMapper.update(delShortLinkDO, updateWrapper);
     }
 }

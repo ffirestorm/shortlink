@@ -43,7 +43,6 @@ import static com.nageoffer.shortlink.admin.common.enums.UserErrorCodeEnum.USER_
 
 /**
  * 用户信息传输过滤器
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
  */
 @RequiredArgsConstructor
 public class UserTransmitFilter implements Filter {
@@ -52,7 +51,8 @@ public class UserTransmitFilter implements Filter {
 
     private static final List<String> IGNORE_URI = Lists.newArrayList(
             "/api/short-link/admin/v1/user/login",
-            "/api/short-link/admin/v1/user/has-username"
+            "/api/short-link/admin/v1/user/has-username",
+            "/api/short-link/admin/v1/user/check-login"
     );
 
     @SneakyThrows
@@ -60,12 +60,14 @@ public class UserTransmitFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String requestURI = httpServletRequest.getRequestURI();
-        if (!IGNORE_URI.contains(requestURI)) {
+        if (!IGNORE_URI.contains(requestURI)) {     // 不是要忽略的
             String method = httpServletRequest.getMethod();
+            // 如果不是/user 并且是 post 类型的：创建短链接、分组、排序等
             if (!(Objects.equals(requestURI, "/api/short-link/admin/v1/user") && Objects.equals(method, "POST"))) {
                 String username = httpServletRequest.getHeader("username");
                 String token = httpServletRequest.getHeader("token");
                 if (!StrUtil.isAllNotBlank(username, token)) {
+                    // token 校验失败，返回A000200
                     returnJson((HttpServletResponse) servletResponse, JSON.toJSONString(Results.failure(new ClientException(USER_TOKEN_FAIL))));
                     return;
                 }

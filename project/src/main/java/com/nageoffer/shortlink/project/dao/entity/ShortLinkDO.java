@@ -29,7 +29,7 @@ import java.util.Date;
 
 /**
  * 短链接实体
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
+ * <p>陈py
  */
 @Data
 @Builder
@@ -76,6 +76,7 @@ public class ShortLinkDO extends BaseDO {
     /**
      * 启用标识 0：启用 1：未启用
      */
+    @TableField("`enable_status`")
     private Integer enableStatus;
 
     /**

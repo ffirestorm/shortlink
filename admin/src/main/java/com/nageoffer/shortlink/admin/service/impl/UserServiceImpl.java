@@ -57,7 +57,7 @@ import static com.nageoffer.shortlink.admin.common.enums.UserErrorCodeEnum.USER_
 
 /**
  * 用户接口实现层
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
+ * <p>陈py
  */
 @Service
 @RequiredArgsConstructor
@@ -83,6 +83,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public Boolean hasUsername(String username) {
+        // 用布隆过滤器来解决用户名的缓存穿透问题。
         return !userRegisterCachePenetrationBloomFilter.contains(username);
     }
 
@@ -122,6 +123,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public UserLoginRespDTO login(UserLoginReqDTO requestParam) {
+        // 查数据库中记录
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
                 .eq(UserDO::getUsername, requestParam.getUsername())
                 .eq(UserDO::getPassword, requestParam.getPassword())
@@ -130,6 +132,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (userDO == null) {
             throw new ClientException("用户不存在");
         }
+        // 放到缓存中，生成一个token
         Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + requestParam.getUsername());
         if (CollUtil.isNotEmpty(hasLoginMap)) {
             String token = hasLoginMap.keySet().stream()
@@ -138,21 +141,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                     .orElseThrow(() -> new ClientException("用户登录错误"));
             return new UserLoginRespDTO(token);
         }
-        /**
-         * Hash
-         * Key：login_用户名
-         * Value：
-         *  Key：token标识
-         *  Val：JSON 字符串（用户信息）
-         */
+                /**
+                 * Hash
+                 * Key：login_用户名
+                 * Value：
+                 *  Key：token标识
+                 *  Val：JSON 字符串（用户信息）
+                 */
         String uuid = UUID.randomUUID().toString();
         stringRedisTemplate.opsForHash().put(USER_LOGIN_KEY + requestParam.getUsername(), uuid, JSON.toJSONString(userDO));
-        stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
+//        缓存过期时间三十天（一开始设置30分钟，测试的时候老是要改，太烦了）
+        stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.DAYS);
         return new UserLoginRespDTO(uuid);
     }
 
     @Override
     public Boolean checkLogin(String username, String token) {
+        // 直接检查缓存中有没有就行了
         return stringRedisTemplate.opsForHash().get(USER_LOGIN_KEY + username, token) != null;
     }
 

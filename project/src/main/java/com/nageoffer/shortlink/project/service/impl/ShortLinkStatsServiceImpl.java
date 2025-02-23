@@ -64,7 +64,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 短链接监控接口实现层
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
+ * <p>陈py
  */
 @Service
 @RequiredArgsConstructor
@@ -446,10 +446,13 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 .eq(LinkAccessLogsDO::getDelFlag, 0)
                 .orderByDesc(LinkAccessLogsDO::getCreateTime);
         IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectPage(requestParam, queryWrapper);
+        // 将查询记录转换为DTO
         IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
+        // 提取了所有访问记录中的用户 (user 字段)，返回一个用户列表 userAccessLogsList
         List<String> userAccessLogsList = actualResult.getRecords().stream()
                 .map(ShortLinkStatsAccessRecordRespDTO::getUser)
                 .toList();
+        // 查询每个用户的访问类型
         List<Map<String, Object>> uvTypeList = linkAccessLogsMapper.selectUvTypeByUsers(
                 requestParam.getGid(),
                 requestParam.getFullShortUrl(),
@@ -457,6 +460,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 requestParam.getEndDate(),
                 userAccessLogsList
         );
+        // 将访问类型信息添加到访问记录中
         actualResult.getRecords().forEach(each -> {
             String uvType = uvTypeList.stream()
                     .filter(item -> Objects.equals(each.getUser(), item.get("user")))
