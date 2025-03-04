@@ -73,6 +73,7 @@ public final class UserContext {
         return Optional.ofNullable(userInfoDTO).map(UserInfoDTO::getRealName).orElse(null);
     }
 
+
     /**
      * 清理用户上下文
      */
