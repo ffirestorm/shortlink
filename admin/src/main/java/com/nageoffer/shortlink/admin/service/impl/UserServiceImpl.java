@@ -135,6 +135,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         // 放到缓存中，生成一个token
         Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + requestParam.getUsername());
         if (CollUtil.isNotEmpty(hasLoginMap)) {
+            // 每次登录都刷新有效期
+            stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.DAYS);
             String token = hasLoginMap.keySet().stream()
                     .findFirst()
                     .map(Object::toString)
